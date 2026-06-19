@@ -43,7 +43,7 @@ export function ChatApp({
   const [imageBusy, setImageBusy] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const { messages, sendMessage, status, stop, setMessages } = useChat({
+  const { messages, sendMessage, status, stop, setMessages, error } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
       prepareSendMessagesRequest: ({ messages, body }) => ({
@@ -243,6 +243,14 @@ export function ChatApp({
             <Welcome mode={mode} onPick={(t) => submit(t)} />
           ) : (
             <MessageList messages={messages} busy={busy} />
+          )}
+          {error && (
+            <div className="mx-auto w-full max-w-3xl px-4 pb-4">
+              <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                <p className="font-medium">Something went wrong</p>
+                <p className="mt-1 text-destructive/90">{error.message}</p>
+              </div>
+            </div>
           )}
         </main>
 

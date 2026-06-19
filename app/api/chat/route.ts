@@ -48,6 +48,9 @@ export async function POST(req: Request) {
   })
 
   return result.toUIMessageStreamResponse({
+    onError: (error) => {
+      return error instanceof Error ? error.message : String(error)
+    },
     originalMessages: messages,
     onFinish: async ({ messages: allMessages, isAborted }) => {
       if (isAborted) return
