@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
+import { KangleiLogo } from '@/components/kanglei-logo'
 
 export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const router = useRouter()
@@ -43,7 +44,14 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
     <main className="min-h-svh bg-background flex items-center justify-center px-4">
       <Card className="w-full max-w-sm p-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <div className="mb-4 flex items-center gap-2.5">
+            <KangleiLogo className="size-9 text-primary" />
+            <div className="leading-tight">
+              <p className="font-heading text-lg font-semibold">Kanglei AI</p>
+              <p className="text-xs text-muted-foreground">by Rakesh Irom</p>
+            </div>
+          </div>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
             {isSignUp ? 'Create an account' : 'Welcome back'}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
