@@ -1,4 +1,4 @@
-import { AuthForm } from '@/components/auth-form'
+import { ModernAuthForm } from '@/components/modern-auth-form'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -12,5 +12,9 @@ export default async function SignInPage() {
     // BETTER_AUTH_SECRET not configured yet — show the form anyway.
   }
   if (hasSession) redirect('/')
-  return <AuthForm mode="sign-in" />
+  return (
+    <main className="min-h-svh bg-gradient-to-r from-gray-200 to-blue-200 flex items-center justify-center px-4">
+      <ModernAuthForm />
+    </main>
+  )
 }
