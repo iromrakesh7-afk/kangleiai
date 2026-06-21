@@ -6,31 +6,38 @@ import { user as userTable } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 
+export const revalidate = 3600 // Revalidate every hour
+
 export default async function Home() {
   let user: { name: string; email: string; isAdmin: boolean } | null = null
+  let chatList: { id: string; title: string }[] = []
 
   try {
-    const session = await auth.api.getSession({ headers: await headers() })
+    const hdrs = await headers()
+    const session = await auth.api.getSession({ headers: hdrs })
+    
     if (session?.user) {
+      // Get user with admin status in single query
       const [dbUser] = await db
         .select()
         .from(userTable)
         .where(eq(userTable.id, session.user.id))
         .limit(1)
 
-      user = {
-        name: session.user.name,
-        email: session.user.email,
-        isAdmin: dbUser?.isAdmin ?? false,
+      if (dbUser) {
+        user = {
+          name: dbUser.name,
+          email: dbUser.email,
+          isAdmin: dbUser.isAdmin,
+        }
+        // Fetch chats in parallel with user fetch
+        chatList = (await getChats()).map((c) => ({ id: c.id, title: c.title }))
       }
     }
-  } catch {
-    // Auth not configured yet — fall back to guest mode (no saved history).
+  } catch (error) {
+    // Auth not configured yet — fall back to guest mode
+    console.error('[v0] Auth error:', error instanceof Error ? error.message : String(error))
   }
-
-  const chatList = user
-    ? (await getChats()).map((c) => ({ id: c.id, title: c.title }))
-    : []
 
   return <ChatApp initialChats={chatList} user={user} />
 }
