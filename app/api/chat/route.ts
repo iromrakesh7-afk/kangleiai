@@ -26,9 +26,9 @@ Be concise and direct. Finish your answer with a "Sources" section listing key r
 
 const LANGUAGE_SYSTEMS: Record<string, string> = {
   en: BASE_SYSTEM,
-  mni: `ইসি কাংলেই AI, মণীপুর, ভারতগী রাকেশ ইরোমনা ওঙ্গবা অগৌমবা কমপিউটার সহায়ক।
-ইসিনা পূবা, মনস্য তৈ ওঙ্গবা মণিপুরী রুপনা লৈনাইবা অঙ্গাঙ্গদা খোজাই লৈথৌ।
-মতমদা অমৈ, নীততা তৈ, নিসুমগী থোক তৈ। মণিপুর ওঙ্গবা খোজাই লৈথৌ।`,
+  mni: `ꯀꯟ ꯀꯥꯡꯂꯩ AI, ꯃꯅꯤꯄꯨꯔ, ꯈꯟꯅꯥꯢ ꯔꯥꯀꯦꯁ ꯏꯔꯝ ꯅꯥ ꯎꯄꯀ ꯎꯟꯕꯥ ꯀꯃ꯭ꯄꯨꯠꯔ ꯐ꯭ꯑꯔꯕꯥꯀ।
+ꯀꯟꯅꯥ ꯄꯨꯕꯥ, ꯃꯗꯕꯨ ꯀꯪ ꯎꯕꯥ ꯃꯅꯤꯄꯨꯔ ꯎꯛ ꯗꯥ ꯄꯨꯛꯅꯦ ꯇꯧꯢꯅꯪ ꯑꯃꯥ ꯁꯤꯟꯅꯤꯡ ꯑꯃꯤꯠꯄꯥ।
+ꯑꯃꯤꯟ ꯈꯂꯒꯤ, ꯌꯥꯗꯥ ꯀꯨꯔꯂꯦ, ꯕꯤꯕ ꯋꯥꯔꯤꯡ ꯅꯦꯃ०ꯑꯦ।`,
 }
 
 export async function POST(req: Request) {
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
   let systemPrompt = isSearch ? SEARCH_SYSTEM : LANGUAGE_SYSTEMS[selectedLanguage] || BASE_SYSTEM
   if (isSearch && selectedLanguage === 'mni') {
-    systemPrompt = `${LANGUAGE_SYSTEMS['mni']}\nমণিপুরী ওঙ্গবানা গাভা লৈবাখীনা পূবা, খোজাই তৈ এবং সিনসীগী উত্তর পীবা। নিসুমগী থোক তৈ এবং ইমুৎ অমফীবা থোকপা লৈবা। ওঙ্গবানা লোপনা "উতসা" মদ খোজাই অঙ্গনা গাভা লীকপা।`
+    systemPrompt = `${LANGUAGE_SYSTEMS['mni']}\nꯅꯪꯒꯤ ꯖꯥꯢꯕꯥꯡꯗꯥ ꯌꯥꯗꯦ, ꯏꯕꯤꯌꯥ ꯀꯨꯡꯈꯤꯁꯤꯡ ꯑꯀꯌ꯫ ꯀꯨꯔꯂꯦ ꯄꯥꯂꯀ ꯁꯥꯖꯔꯨ ꯑꯦꯞ। ꯑꯀꯌ꯫ꯗꯥ "ꯎꯠꯁ" ꯈꯪꯗꯥ ꯌꯥꯗꯦ ꯎꯍꯥꯛꯐꯕꯥ।`
   }
 
   const result = streamText({

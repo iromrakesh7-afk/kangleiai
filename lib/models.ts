@@ -47,7 +47,7 @@ export const IMAGE_MODEL = 'google-imagen-3.0-generate-001'
 // Supported languages for Kanglei AI
 export const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'mni', name: 'Manipuri', nativeName: 'মৈতৈ' },
+  { code: 'mni', name: 'Manipuri', nativeName: 'ꯀꯤꯇꯩ ꯃꯌꯦꯛ' },
 ] as const
 
 export const DEFAULT_LANGUAGE = 'en'

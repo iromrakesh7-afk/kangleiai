@@ -10,8 +10,8 @@ const SUGGESTIONS: Record<ChatMode, { icon: typeof Search; text: string }[]> = {
     { icon: MessagesSquare, text: 'Write a haiku about the Loktak Lake' },
     { icon: MessagesSquare, text: 'Help me plan a 3-day trip to Manipur' },
     { icon: MessagesSquare, text: 'Draft a polite follow-up email' },
-    { icon: MessagesSquare, text: 'মণিপুর লোইনবা পান সীমনা উঙ্গাই পীবা' },
-    { icon: MessagesSquare, text: 'লোকতাক লেইমা পান থেমলেই' },
+    { icon: MessagesSquare, text: 'ꯃꯅꯤꯄꯨꯔꯒꯤ ꯎꯎꯇꯐꯕꯥ ꯗꯨꯠꯄꯥ' },
+    { icon: MessagesSquare, text: 'ꯂꯣꯀꯇꯥꯛ ꯂꯩꯃꯦꯀꯨ ꯀꯪꯖꯥꯢꯅꯥ ꯏꯟ ꯅꯦꯃꯥꯒꯨ' },
   ],
   search: [
     { icon: Search, text: 'Latest developments in AI this week' },
