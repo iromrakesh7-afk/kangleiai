@@ -248,9 +248,9 @@ export function ChatApp({
           )}
           {error && (
             <div className="mx-auto w-full max-w-3xl px-4 pb-4">
-              <div className="rounded-lg border border-[rgba(239,68,68,0.4)] bg-[rgba(239,68,68,0.1)] px-4 py-3 text-sm text-destructive">
+              <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
                 <p className="font-medium">Something went wrong</p>
-                <p className="mt-1 text-[rgba(239,68,68,0.9)]">{error.message}</p>
+                <p className="mt-1 text-red-600">{error.message}</p>
               </div>
             </div>
           )}
