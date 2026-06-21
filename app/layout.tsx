@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   description:
     'Kanglei AI, founded by Rakesh Irom from Manipur. A multi-model AI assistant with chat, web search, and image generation.',
   generator: 'v0.app',
+  verification: {
+    google: 'iLWebto6sxDCoc54ur6bgvQUcbYG3K1Gp0lQ9gD5Xbk',
+  },
 }
 
 export const viewport: Viewport = {
