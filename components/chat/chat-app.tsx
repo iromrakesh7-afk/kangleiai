@@ -79,8 +79,9 @@ export function ChatApp({
       // Ctrl/Cmd + M: Toggle between Chat and Search modes
       if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
         e.preventDefault()
-        if (mode === 'chat') setMode('search')
-        else if (mode === 'search') setMode('chat')
+        setMode((currentMode) =>
+          currentMode === 'chat' ? 'search' : 'chat'
+        )
       }
 
       // Ctrl/Cmd + L: Toggle language
@@ -92,7 +93,7 @@ export function ChatApp({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [mode])
+  }, [])
 
   async function refreshChats() {
     if (!user) return
