@@ -36,7 +36,8 @@ export function PhoneInput({
       <div>
         <label className="block text-sm font-medium mb-2">Phone Number</label>
         <Input
-          type="tel"
+          type="text"
+          inputMode="tel"
           placeholder="+1 (555) 123-4567"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}

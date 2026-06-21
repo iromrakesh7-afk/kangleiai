@@ -21,7 +21,7 @@ export function LanguageSelector({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
