@@ -30,7 +30,7 @@ export function ModeTabs({
             type="button"
             disabled={disabled || m.disabled}
             onClick={() => onChange(m.id)}
-            title={m.disabled ? 'Coming soon' : ''}
+            title={m.disabled ? 'Coming soon' : `${m.label} (Ctrl+M)`}
             className={cn(
               'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50',
               active

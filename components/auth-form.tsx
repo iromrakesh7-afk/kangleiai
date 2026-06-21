@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { KangleiLogo } from '@/components/kanglei-logo'
 import { authClient } from '@/lib/auth-client'
 
 export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
@@ -31,8 +31,15 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
     <main className="min-h-svh bg-background flex items-center justify-center px-4">
       <Card className="w-full max-w-sm p-6">
         <div className="mb-8">
-          <div className="mb-4 flex items-center gap-2.5">
-            <KangleiLogo className="size-9 text-primary" />
+          <div className="mb-4 flex items-center gap-3">
+            <div className="relative size-10 shrink-0">
+              <Image
+                src="/kanglei-logo.png"
+                alt="Kanglei AI"
+                fill
+                className="object-contain"
+              />
+            </div>
             <div className="leading-tight">
               <p className="font-heading text-lg font-semibold">Kanglei AI</p>
               <p className="text-xs text-muted-foreground">by Rakesh Irom</p>

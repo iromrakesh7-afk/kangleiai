@@ -26,7 +26,7 @@ export function LanguageSelector({
           variant="ghost"
           size="sm"
           className="gap-2 text-xs"
-          title="Change language"
+          title="Change language (Ctrl+L)"
         >
           <Globe className="size-4" />
           <span className="hidden sm:inline">{currentLang?.name}</span>

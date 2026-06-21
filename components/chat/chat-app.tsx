@@ -73,6 +73,27 @@ export function ChatApp({
     prevStatus.current = status
   }, [status, user])
 
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + M: Toggle between Chat and Search modes
+      if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+        e.preventDefault()
+        if (mode === 'chat') setMode('search')
+        else if (mode === 'search') setMode('chat')
+      }
+
+      // Ctrl/Cmd + L: Toggle language
+      if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+        e.preventDefault()
+        setLanguage((prev) => (prev === 'en' ? 'mni' : 'en'))
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [mode])
+
   async function refreshChats() {
     if (!user) return
     try {
