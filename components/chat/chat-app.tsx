@@ -18,10 +18,10 @@ import { Menu, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Composer } from './composer'
+import { ChatSearchToggle } from './chat-search-toggle'
 import { LanguageSelector } from './language-selector'
 import { MessageList } from './message-list'
 import { ModeTabs } from './mode-tabs'
-import { ModelSelector } from './model-selector'
 import { Sidebar, type ChatSummary } from './sidebar'
 import { Welcome } from './welcome'
 
@@ -202,13 +202,6 @@ export function ChatApp({
     sendMessage({ text: trimmed }, { body: { model, mode, chatId, language } })
   }
 
-  const modeLabel =
-    mode === 'image'
-      ? 'Image generation'
-      : mode === 'search'
-        ? 'Web search'
-        : getModelName(model)
-
   return (
     <div className="flex h-dvh overflow-hidden bg-background">
       {/* Desktop sidebar */}
@@ -257,12 +250,7 @@ export function ChatApp({
             {sidebarOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </Button>
           <div className="flex flex-1 items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <ModeTabs value={mode} onChange={setMode} disabled={busy} />
-              {mode === 'chat' && (
-                <ModelSelector value={model} onChange={setModel} disabled={busy} />
-              )}
-            </div>
+            <ModeTabs value={mode} onChange={setMode} disabled={busy} />
             <LanguageSelector
               currentLanguage={language}
               onLanguageChange={setLanguage}
@@ -288,6 +276,13 @@ export function ChatApp({
 
         <div className="border-t border-border bg-background px-4 py-3">
           <div className="mx-auto w-full max-w-3xl">
+            <div className="mb-3 flex justify-center">
+              <ChatSearchToggle
+                mode={mode}
+                onChange={setMode}
+                disabled={busy}
+              />
+            </div>
             <Composer
               input={input}
               setInput={setInput}
@@ -297,8 +292,7 @@ export function ChatApp({
               mode={mode}
             />
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              {modeLabel} · Kanglei AI can make mistakes. Verify important
-              information.
+              Kanglei AI can make mistakes. Verify important information.
             </p>
           </div>
         </div>
