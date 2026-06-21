@@ -8,6 +8,8 @@ export const user = pgTable('user', {
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   emailVerified: boolean('emailVerified').notNull().default(false),
+  phoneNumber: text('phoneNumber').unique(),
+  phoneVerified: boolean('phoneVerified').notNull().default(false),
   image: text('image'),
   isAdmin: boolean('isAdmin').notNull().default(false),
   createdAt: timestamp('createdAt').notNull().defaultNow(),

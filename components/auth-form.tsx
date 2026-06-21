@@ -6,11 +6,16 @@ import Image from 'next/image'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { authClient } from '@/lib/auth-client'
+import { PhoneInput } from '@/components/phone-auth/phone-input'
+import { OTPVerification } from '@/components/phone-auth/otp-verification'
 
 export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>('')
+  const [authMethod, setAuthMethod] = useState<'google' | 'phone'>('google')
+  const [phoneNumber, setPhoneNumber] = useState<string>('')
+  const [otpSent, setOtpSent] = useState(false)
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
@@ -25,6 +30,67 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       setError(message)
       setIsLoading(false)
     }
+  }
+
+  const handleSendOTP = async (phone: string) => {
+    setIsLoading(true)
+    setError('')
+    try {
+      const response = await fetch('/api/auth/phone/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phone }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to send OTP')
+      }
+
+      setPhoneNumber(phone)
+      setOtpSent(true)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to send OTP'
+      setError(message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleVerifyOTP = async (otp: string) => {
+    setIsLoading(true)
+    setError('')
+    try {
+      const response = await fetch('/api/auth/phone/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber, otp }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to verify OTP')
+      }
+
+      const data = await response.json()
+      
+      // Create session using auth client
+      await authClient.getSession()
+      
+      // Redirect to home
+      router.push('/')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to verify OTP'
+      setError(message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleBackToPhone = () => {
+    setOtpSent(false)
+    setPhoneNumber('')
+    setError('')
   }
 
   return (
@@ -49,10 +115,39 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
             {mode === 'sign-up' ? 'Join Kanglei AI' : 'Welcome back'}
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
-            {mode === 'sign-up'
-              ? 'Sign up with your Google account to get started'
-              : 'Sign in with your Google account to continue'}
+            {authMethod === 'phone'
+              ? 'Sign in with your phone number'
+              : mode === 'sign-up'
+                ? 'Sign up with your Google account to get started'
+                : 'Sign in with your Google account to continue'}
           </p>
+        </div>
+
+        {/* Auth Method Toggle */}
+        <div className="mb-6 flex gap-2">
+          <Button
+            variant={authMethod === 'google' ? 'default' : 'outline'}
+            size="sm"
+            className="flex-1"
+            onClick={() => {
+              setAuthMethod('google')
+              setOtpSent(false)
+              setError('')
+            }}
+          >
+            Google
+          </Button>
+          <Button
+            variant={authMethod === 'phone' ? 'default' : 'outline'}
+            size="sm"
+            className="flex-1"
+            onClick={() => {
+              setAuthMethod('phone')
+              setError('')
+            }}
+          >
+            Phone
+          </Button>
         </div>
 
         {error && (
@@ -61,19 +156,30 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
           </div>
         )}
 
-        <Button
-          onClick={handleGoogleSignIn}
-          disabled={isLoading}
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 font-medium"
-        >
-          {isLoading ? 'Signing in...' : 'Continue with Google'}
-        </Button>
+        {authMethod === 'google' ? (
+          <Button
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 font-medium"
+          >
+            {isLoading ? 'Signing in...' : 'Continue with Google'}
+          </Button>
+        ) : otpSent ? (
+          <OTPVerification
+            phoneNumber={phoneNumber}
+            onVerify={handleVerifyOTP}
+            onBack={handleBackToPhone}
+            loading={isLoading}
+          />
+        ) : (
+          <PhoneInput onSubmit={handleSendOTP} loading={isLoading} />
+        )}
 
         <div className="mt-6 text-center text-xs text-muted-foreground">
           <p>
             {mode === 'sign-up'
               ? 'By signing up, you agree to our Terms of Service'
-              : 'Secure sign-in powered by Google'}
+              : 'Secure authentication powered by Google and Twilio'}
           </p>
         </div>
       </Card>
