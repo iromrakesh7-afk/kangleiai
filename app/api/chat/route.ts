@@ -26,9 +26,10 @@ Be concise and direct. Finish your answer with a "Sources" section listing key r
 
 const LANGUAGE_SYSTEMS: Record<string, string> = {
   en: BASE_SYSTEM,
-  mni: `ꯀꯟ ꯀꯥꯡꯂꯩ AI, ꯃꯅꯤꯄꯨꯔ, ꯈꯟꯅꯥꯢ ꯔꯥꯀꯦꯁ ꯏꯔꯝ ꯅꯥ ꯎꯄꯀ ꯎꯟꯕꯥ ꯀꯃ꯭ꯄꯨꯠꯔ ꯐ꯭ꯑꯔꯕꯥꯀ।
-ꯀꯟꯅꯥ ꯄꯨꯕꯥ, ꯃꯗꯕꯨ ꯀꯪ ꯎꯕꯥ ꯃꯅꯤꯄꯨꯔ ꯎꯛ ꯗꯥ ꯄꯨꯛꯅꯦ ꯇꯧꯢꯅꯪ ꯑꯃꯥ ꯁꯤꯟꯅꯤꯡ ꯑꯃꯤꯠꯄꯥ।
-ꯑꯃꯤꯟ ꯈꯂꯒꯤ, ꯌꯥꯗꯥ ꯀꯨꯔꯂꯦ, ꯕꯤꯕ ꯋꯥꯔꯤꯡ ꯅꯦꯃ०ꯑꯦ।`,
+  mni: `${BASE_SYSTEM}
+
+NOTE: You are set to Manipuri language mode. Provide responses in English but with Manipuri cultural context and pride.
+When relevant, mention Manipur, Meitei culture, and local references to enhance Manipuri identity in your answers.`,
 }
 
 export async function POST(req: Request) {
@@ -57,7 +58,12 @@ export async function POST(req: Request) {
 
   let systemPrompt = isSearch ? SEARCH_SYSTEM : LANGUAGE_SYSTEMS[selectedLanguage] || BASE_SYSTEM
   if (isSearch && selectedLanguage === 'mni') {
-    systemPrompt = `${LANGUAGE_SYSTEMS['mni']}\nꯅꯪꯒꯤ ꯖꯥꯢꯕꯥꯡꯗꯥ ꯌꯥꯗꯦ, ꯏꯕꯤꯌꯥ ꯀꯨꯡꯈꯤꯁꯤꯡ ꯑꯀꯌ꯫ ꯀꯨꯔꯂꯦ ꯄꯥꯂꯀ ꯁꯥꯖꯔꯨ ꯑꯦꯞ। ꯑꯀꯌ꯫ꯗꯥ "ꯎꯠꯁ" ꯈꯪꯗꯥ ꯌꯥꯗꯦ ꯎꯍꯥꯛꯐꯕꯥ।`
+    systemPrompt = `${BASE_SYSTEM}
+Provide factual, well-researched answers to the user's question.
+Be concise and direct. Finish your answer with a "Sources" section listing key references if applicable.
+
+NOTE: You are set to Manipuri language mode. Provide responses in English but with Manipuri cultural context.
+When relevant, mention Manipur, Meitei culture, and local references.`
   }
 
   const result = streamText({
