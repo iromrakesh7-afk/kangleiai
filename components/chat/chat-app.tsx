@@ -18,6 +18,7 @@ import { Menu, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Composer } from './composer'
+import { LanguageSelector } from './language-selector'
 import { MessageList } from './message-list'
 import { ModeTabs } from './mode-tabs'
 import { ModelSelector } from './model-selector'
@@ -39,6 +40,7 @@ export function ChatApp({
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [model, setModel] = useState(DEFAULT_MODEL)
   const [mode, setMode] = useState<ChatMode>('chat')
+  const [language, setLanguage] = useState('en')
   const [input, setInput] = useState('')
   const [imageBusy, setImageBusy] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -175,7 +177,7 @@ export function ChatApp({
       return
     }
 
-    sendMessage({ text: trimmed }, { body: { model, mode, chatId } })
+    sendMessage({ text: trimmed }, { body: { model, mode, chatId, language } })
   }
 
   const modeLabel =
@@ -233,10 +235,16 @@ export function ChatApp({
             {sidebarOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </Button>
           <div className="flex flex-1 items-center justify-between gap-3">
-            <ModeTabs value={mode} onChange={setMode} disabled={busy} />
-            {mode === 'chat' && (
-              <ModelSelector value={model} onChange={setModel} disabled={busy} />
-            )}
+            <div className="flex items-center gap-2">
+              <ModeTabs value={mode} onChange={setMode} disabled={busy} />
+              {mode === 'chat' && (
+                <ModelSelector value={model} onChange={setModel} disabled={busy} />
+              )}
+            </div>
+            <LanguageSelector
+              currentLanguage={language}
+              onLanguageChange={setLanguage}
+            />
           </div>
         </header>
 
