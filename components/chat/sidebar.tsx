@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { authClient } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
-import { LogIn, LogOut, MessageSquarePlus, Trash2 } from 'lucide-react'
+import { LogIn, LogOut, MessageSquarePlus, Settings, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export interface ChatSummary {
@@ -20,6 +20,7 @@ export function Sidebar({
   onSelectChat,
   onDeleteChat,
   user,
+  isAdmin,
 }: {
   chats: ChatSummary[]
   activeChatId: string | null
@@ -27,6 +28,7 @@ export function Sidebar({
   onSelectChat: (id: string) => void
   onDeleteChat: (id: string) => void
   user: { name: string; email: string } | null
+  isAdmin: boolean
 }) {
   const router = useRouter()
 
@@ -92,23 +94,35 @@ export function Sidebar({
 
       <div className="border-t border-sidebar-border p-3">
         {user ? (
-          <div className="flex items-center gap-2">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sidebar-primary font-medium text-sidebar-primary-foreground">
-              {user.name.charAt(0).toUpperCase()}
+          <div className="space-y-3">
+            {isAdmin && (
+              <Button
+                variant="outline"
+                onClick={() => router.push('/admin')}
+                className="w-full justify-start gap-2 border-sidebar-border bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              >
+                <Settings className="size-4" />
+                Admin Dashboard
+              </Button>
+            )}
+            <div className="flex items-center gap-2">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sidebar-primary font-medium text-sidebar-primary-foreground">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1 leading-tight">
+                <p className="truncate text-sm font-medium">{user.name}</p>
+                <p className="truncate text-xs text-sidebar-foreground/60">
+                  {user.email}
+                </p>
+              </div>
+              <button
+                onClick={signOut}
+                aria-label="Sign out"
+                className="rounded-md p-2 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              >
+                <LogOut className="size-4" />
+              </button>
             </div>
-            <div className="min-w-0 flex-1 leading-tight">
-              <p className="truncate text-sm font-medium">{user.name}</p>
-              <p className="truncate text-xs text-sidebar-foreground/60">
-                {user.email}
-              </p>
-            </div>
-            <button
-              onClick={signOut}
-              aria-label="Sign out"
-              className="rounded-md p-2 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-            >
-              <LogOut className="size-4" />
-            </button>
           </div>
         ) : (
           <Button

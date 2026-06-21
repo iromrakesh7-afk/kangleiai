@@ -33,7 +33,7 @@ export function ChatApp({
   user,
 }: {
   initialChats: ChatSummary[]
-  user: { name: string; email: string } | null
+  user: { name: string; email: string; isAdmin: boolean } | null
 }) {
   const [chats, setChats] = useState<ChatSummary[]>(initialChats)
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
@@ -196,6 +196,7 @@ export function ChatApp({
           onSelectChat={selectChat}
           onDeleteChat={removeChat}
           user={user}
+          isAdmin={user?.isAdmin ?? false}
         />
       </div>
 
@@ -214,6 +215,7 @@ export function ChatApp({
               onSelectChat={selectChat}
               onDeleteChat={removeChat}
               user={user}
+              isAdmin={user?.isAdmin ?? false}
             />
           </div>
         </div>
@@ -246,9 +248,9 @@ export function ChatApp({
           )}
           {error && (
             <div className="mx-auto w-full max-w-3xl px-4 pb-4">
-              <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <div className="rounded-lg border border-[rgba(239,68,68,0.4)] bg-[rgba(239,68,68,0.1)] px-4 py-3 text-sm text-destructive">
                 <p className="font-medium">Something went wrong</p>
-                <p className="mt-1 text-destructive/90">{error.message}</p>
+                <p className="mt-1 text-[rgba(239,68,68,0.9)]">{error.message}</p>
               </div>
             </div>
           )}
