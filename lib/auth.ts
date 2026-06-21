@@ -3,6 +3,10 @@ import { pool } from '@/lib/db'
 
 const getAllTrustedOrigins = () => {
   const origins = [
+    // v0 preview environments (wildcard — covers the *.vusercontent.net iframe origin)
+    'https://*.vusercontent.net',
+    'https://*.v0.dev',
+    'https://*.vercel.app',
     // V0 preview environment
     ...(process.env.V0_RUNTIME_URL ? [process.env.V0_RUNTIME_URL] : []),
     // Vercel preview deployments
@@ -11,19 +15,14 @@ const getAllTrustedOrigins = () => {
     ...(process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`]
       : []),
+    // Always accept localhost variants for local/preview dev
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://localhost',
+    'http://127.0.0.1',
   ]
-
-  // In development, accept all localhost variants and v0 preview
-  if (process.env.NODE_ENV === 'development') {
-    origins.push(
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://127.0.0.1:3000',
-      'http://127.0.0.1:3001',
-      'http://localhost',
-      'http://127.0.0.1'
-    )
-  }
 
   return origins
 }
