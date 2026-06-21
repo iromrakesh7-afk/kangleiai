@@ -41,8 +41,16 @@ export const DEFAULT_MODEL: ModelId = CHAT_MODELS[0].id
 // For Groq: use the fastest model for search mode (Llama 3.1 8B Instant).
 export const SEARCH_MODEL = 'llama-3.1-8b-instant'
 
-// Groq does not have built-in image generation; image mode will be disabled.
-export const IMAGE_MODEL = null
+// Image generation using Google Imagen via Vertex AI
+export const IMAGE_MODEL = 'google-imagen-3.0-generate-001'
+
+// Supported languages for Kanglei AI
+export const SUPPORTED_LANGUAGES = [
+  { code: 'en', name: 'English', nativeName: 'English' },
+  { code: 'mni', name: 'Manipuri', nativeName: 'মণিপুরী' },
+] as const
+
+export const DEFAULT_LANGUAGE = 'en'
 
 export function getModelName(id: string): string {
   return CHAT_MODELS.find((m) => m.id === id)?.name ?? 'Kanglei AI'
