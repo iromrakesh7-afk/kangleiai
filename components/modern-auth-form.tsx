@@ -24,22 +24,26 @@ export function ModernAuthForm() {
     e.preventDefault()
     setIsLoading(true)
     setError('')
-    
+
     try {
-      // Check if this is the admin user
-      if (signInEmail === 'iromrakesh7@gmail.com' && signInPassword === 'vince9863') {
-        // Setup admin if not exists, then redirect to home
+      // Ensure the admin account exists before the admin tries to sign in
+      if (signInEmail.trim().toLowerCase() === 'iromrakesh7@gmail.com') {
         await fetch('/api/admin/setup', { method: 'POST' })
-        
-        // In a real app, create a session here
-        // For now, redirect to home - Better Auth will handle the session
-        router.push('/')
+      }
+
+      const { error: signInError } = await authClient.signIn.email({
+        email: signInEmail.trim(),
+        password: signInPassword,
+      })
+
+      if (signInError) {
+        setError(signInError.message || 'Invalid email or password')
+        setIsLoading(false)
         return
       }
 
-      // For other users, use Google OAuth
-      setError('Please use Google Sign-In or Phone Authentication')
-      setIsLoading(false)
+      router.push('/')
+      router.refresh()
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Sign in failed'
       setError(message)
@@ -51,8 +55,27 @@ export function ModernAuthForm() {
     e.preventDefault()
     setIsLoading(true)
     setError('')
-    setError('Please use Google Sign-In to create an account')
-    setIsLoading(false)
+
+    try {
+      const { error: signUpError } = await authClient.signUp.email({
+        email: signUpEmail.trim(),
+        password: signUpPassword,
+        name: signUpName.trim() || signUpEmail.trim(),
+      })
+
+      if (signUpError) {
+        setError(signUpError.message || 'Sign up failed')
+        setIsLoading(false)
+        return
+      }
+
+      router.push('/')
+      router.refresh()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Sign up failed'
+      setError(message)
+      setIsLoading(false)
+    }
   }
 
   const handleGoogleSignIn = async () => {

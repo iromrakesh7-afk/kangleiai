@@ -1,87 +1,56 @@
 import { db } from '@/lib/db'
 import { user } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
-import crypto from 'crypto'
+import { auth } from '@/lib/auth'
+
+const ADMIN_EMAIL = 'iromrakesh7@gmail.com'
+const ADMIN_PASSWORD = 'vince9863'
 
 /**
- * Setup admin user - this endpoint should only be called once during setup
+ * Idempotent admin bootstrap.
+ * Creates the admin account through Better Auth (so the password is hashed and
+ * stored in the `account` table) and marks the user row as admin.
+ * Safe to call repeatedly — it no-ops once the admin exists.
  */
-export async function POST(req: Request) {
+export async function POST() {
   try {
-    // Security: Check if admin already exists
-    const existingAdmin = await db
+    const existing = await db
       .select()
       .from(user)
-      .where(eq(user.email, 'iromrakesh7@gmail.com'))
+      .where(eq(user.email, ADMIN_EMAIL))
       .limit(1)
 
-    if (existingAdmin.length > 0) {
-      return Response.json(
-        { success: false, message: 'Admin user already exists' },
-        { status: 400 }
-      )
+    if (existing.length > 0) {
+      // Make sure the admin flag is set even if the row was created another way.
+      if (!existing[0].isAdmin) {
+        await db
+          .update(user)
+          .set({ isAdmin: true })
+          .where(eq(user.email, ADMIN_EMAIL))
+      }
+      return Response.json({ success: true, message: 'Admin already exists' })
     }
 
-    // Create admin user
-    const adminId = crypto.randomUUID()
-    const adminUser = await db
-      .insert(user)
-      .values({
-        id: adminId,
-        name: 'Admin - Rakesh Irom',
-        email: 'iromrakesh7@gmail.com',
-        emailVerified: true,
-        isAdmin: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .returning()
-
-    return Response.json({
-      success: true,
-      message: 'Admin user created successfully',
-      user: adminUser[0],
+    // Create the admin via Better Auth so the password hash lands in `account`.
+    await auth.api.signUpEmail({
+      body: {
+        email: ADMIN_EMAIL,
+        password: ADMIN_PASSWORD,
+        name: 'Rakesh Irom',
+      },
     })
+
+    // Promote the freshly created user to admin.
+    await db
+      .update(user)
+      .set({ isAdmin: true, emailVerified: true })
+      .where(eq(user.email, ADMIN_EMAIL))
+
+    return Response.json({ success: true, message: 'Admin user created' })
   } catch (error) {
     console.error('[v0] Admin setup error:', error)
     return Response.json(
       { error: error instanceof Error ? error.message : 'Setup failed' },
-      { status: 500 }
-    )
-  }
-}
-
-/**
- * Verify admin endpoint
- */
-export async function GET(req: Request) {
-  try {
-    const admin = await db
-      .select()
-      .from(user)
-      .where(eq(user.email, 'iromrakesh7@gmail.com'))
-      .limit(1)
-
-    if (admin.length === 0) {
-      return Response.json(
-        { exists: false, message: 'Admin not found' },
-        { status: 404 }
-      )
-    }
-
-    return Response.json({
-      exists: true,
-      admin: {
-        id: admin[0].id,
-        name: admin[0].name,
-        email: admin[0].email,
-        isAdmin: admin[0].isAdmin,
-      },
-    })
-  } catch (error) {
-    console.error('[v0] Admin check error:', error)
-    return Response.json(
-      { error: error instanceof Error ? error.message : 'Check failed' },
       { status: 500 }
     )
   }
