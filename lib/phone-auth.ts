@@ -1,14 +1,23 @@
 import { Twilio } from 'twilio'
 import crypto from 'crypto'
+import { verification } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
-if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
-  throw new Error('Missing Twilio environment variables')
+let twilioClient: Twilio | null = null
+
+// Lazy load Twilio client only if credentials are available
+function getTwilioClient(): Twilio {
+  if (!twilioClient) {
+    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+      throw new Error('Missing Twilio environment variables')
+    }
+    twilioClient = new Twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    )
+  }
+  return twilioClient
 }
-
-const twilioClient = new Twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-)
 
 /**
  * Validate phone number format (E.164 format)
