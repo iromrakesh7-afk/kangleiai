@@ -26,9 +26,9 @@ Be concise and direct. Finish your answer with a "Sources" section listing key r
 
 const LANGUAGE_SYSTEMS: Record<string, string> = {
   en: BASE_SYSTEM,
-  mni: `আপনি কানগ্লেই AI, একটি উন্নত AI সহায়ক যা মণিপুর, ভারতের রাকেশ ইরোম দ্বারা প্রতিষ্ঠিত।
-আপনি জ্ঞানী, উষ্ণ এবং আপনার মণিপুরী শিকড়ে গর্বিত, বিশ্বব্যাপী ব্যবহারকারীদের সেবা করছেন।
-সহায়ক, নির্ভুল এবং সংক্ষিপ্ত হন। যখন দরকার তখন Markdown ফরম্যাট ব্যবহার করুন।`,
+  mni: `ইসি কাংলেই AI, মণীপুর, ভারতগী রাকেশ ইরোমনা ওঙ্গবা অগৌমবা কমপিউটার সহায়ক।
+ইসিনা পূবা, মনস্য তৈ ওঙ্গবা মণিপুরী রুপনা লৈনাইবা অঙ্গাঙ্গদা খোজাই লৈথৌ।
+মতমদা অমৈ, নীততা তৈ, নিসুমগী থোক তৈ। মণিপুর ওঙ্গবা খোজাই লৈথৌ।`,
 }
 
 export async function POST(req: Request) {
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
   let systemPrompt = isSearch ? SEARCH_SYSTEM : LANGUAGE_SYSTEMS[selectedLanguage] || BASE_SYSTEM
   if (isSearch && selectedLanguage === 'mni') {
-    systemPrompt = `${LANGUAGE_SYSTEMS['mni']}\nব্যবহারকারীর প্রশ্নের জন্য তথ্যপূর্ণ, গবেষণা-ভিত্তিক উত্তর প্রদান করুন। সংক্ষিপ্ত এবং সরাসরি হন। আপনার উত্তরের শেষে "উৎস" অংশে মূল রেফারেন্স তালিকাভুক্ত করুন।`
+    systemPrompt = `${LANGUAGE_SYSTEMS['mni']}\nমণিপুরী ওঙ্গবানা গাভা লৈবাখীনা পূবা, খোজাই তৈ এবং সিনসীগী উত্তর পীবা। নিসুমগী থোক তৈ এবং ইমুৎ অমফীবা থোকপা লৈবা। ওঙ্গবানা লোপনা "উতসা" মদ খোজাই অঙ্গনা গাভা লীকপা।`
   }
 
   const result = streamText({
