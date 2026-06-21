@@ -72,17 +72,11 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
         throw new Error(data.error || 'Failed to verify OTP')
       }
 
-      const data = await response.json()
-      
-      // Create session using auth client
-      await authClient.getSession()
-      
-      // Redirect to home
+      // Phone auth successful - redirect to home
       router.push('/')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to verify OTP'
       setError(message)
-    } finally {
       setIsLoading(false)
     }
   }

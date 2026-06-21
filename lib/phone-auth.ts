@@ -19,6 +19,8 @@ function getTwilioClient(): Twilio {
   return twilioClient
 }
 
+type AnyDB = any
+
 /**
  * Validate phone number format (E.164 format)
  * Accepts: +1234567890, +44 1234 567890, etc.
@@ -60,7 +62,8 @@ export async function sendOTP(phoneNumber: string, otp: string): Promise<void> {
       return
     }
 
-    await twilioClient.messages.create({
+    const client = getTwilioClient()
+    await client.messages.create({
       body: `Your Kanglei AI verification code is: ${otp}. Valid for 10 minutes.`,
       from: process.env.TWILIO_PHONE_NUMBER!,
       to: phoneNumber,
@@ -77,30 +80,32 @@ export async function sendOTP(phoneNumber: string, otp: string): Promise<void> {
 export async function verifyOTP(
   identifier: string,
   otp: string,
-  db: any
+  db: AnyDB
 ): Promise<boolean> {
-  const { verification } = await import('@/lib/db/schema')
-  const { eq } = await import('drizzle-orm')
+  try {
+    const record = await db
+      .select()
+      .from(verification)
+      .where(eq(verification.identifier, `phone_otp_${identifier}`))
+      .limit(1)
 
-  const record = await db
-    .select()
-    .from(verification)
-    .where(eq(verification.identifier, `phone_otp_${identifier}`))
-    .limit(1)
+    if (!record || record.length === 0) {
+      return false
+    }
 
-  if (!record.length) {
+    const { value, expiresAt } = record[0]
+    
+    // Check if OTP is expired
+    if (new Date() > new Date(expiresAt)) {
+      return false
+    }
+
+    // Verify OTP value
+    return value === otp
+  } catch (error) {
+    console.error('[v0] Error verifying OTP:', error)
     return false
   }
-
-  const { value, expiresAt } = record[0]
-  
-  // Check if OTP is expired
-  if (new Date() > new Date(expiresAt)) {
-    return false
-  }
-
-  // Verify OTP value
-  return value === otp
 }
 
 /**
@@ -109,36 +114,40 @@ export async function verifyOTP(
 export async function storeOTP(
   identifier: string,
   otp: string,
-  db: any
+  db: AnyDB
 ): Promise<void> {
-  const { verification } = await import('@/lib/db/schema')
-  const { eq, and } = await import('drizzle-orm')
+  try {
+    const expiresAt = new Date()
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10)
 
-  const expiresAt = new Date()
-  expiresAt.setMinutes(expiresAt.getMinutes() + 10)
+    // Delete any existing OTP for this identifier
+    await db.delete(verification).where(
+      eq(verification.identifier, `phone_otp_${identifier}`)
+    )
 
-  // Delete any existing OTP for this identifier
-  await db.delete(verification).where(
-    eq(verification.identifier, `phone_otp_${identifier}`)
-  )
-
-  // Store new OTP
-  await db.insert(verification).values({
-    id: crypto.randomUUID(),
-    identifier: `phone_otp_${identifier}`,
-    value: otp,
-    expiresAt,
-  })
+    // Store new OTP
+    await db.insert(verification).values({
+      id: crypto.randomUUID(),
+      identifier: `phone_otp_${identifier}`,
+      value: otp,
+      expiresAt,
+    })
+  } catch (error) {
+    console.error('[v0] Error storing OTP:', error)
+    throw error
+  }
 }
 
 /**
  * Delete OTP after verification
  */
-export async function deleteOTP(identifier: string, db: any): Promise<void> {
-  const { verification } = await import('@/lib/db/schema')
-  const { eq } = await import('drizzle-orm')
-
-  await db.delete(verification).where(
-    eq(verification.identifier, `phone_otp_${identifier}`)
-  )
+export async function deleteOTP(identifier: string, db: AnyDB): Promise<void> {
+  try {
+    await db.delete(verification).where(
+      eq(verification.identifier, `phone_otp_${identifier}`)
+    )
+  } catch (error) {
+    console.error('[v0] Error deleting OTP:', error)
+    throw error
+  }
 }

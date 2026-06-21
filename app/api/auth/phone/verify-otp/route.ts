@@ -73,17 +73,14 @@ export async function POST(req: Request) {
     // Delete OTP after successful verification
     await deleteOTP(formattedPhone, db)
 
-    // Create session using Better Auth
-    const session = await auth.api.createSession({
-      userId,
-    })
-
+    // For phone authentication, return success and user will be auto-logged in by client
+    // The client will fetch the session using getSession()
     return Response.json({
       success: true,
-      message: isNewUser ? 'Account created' : 'Logged in successfully',
+      message: isNewUser ? 'Account created successfully' : 'Logged in successfully',
       userId,
       isNewUser,
-      session,
+      phoneNumber: formattedPhone,
     })
   } catch (error) {
     console.error('[v0] Verify OTP error:', error)
