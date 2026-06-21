@@ -2,12 +2,12 @@
 
 import type { ChatMode } from '@/lib/models'
 import { cn } from '@/lib/utils'
-import { ImageIcon, MessagesSquare, Search } from 'lucide-react'
+import { MessagesSquare, Search } from 'lucide-react'
 
 const MODES: { id: ChatMode; label: string; icon: typeof Search }[] = [
   { id: 'chat', label: 'Chat', icon: MessagesSquare },
   { id: 'search', label: 'Search', icon: Search },
-  { id: 'image', label: 'Image', icon: ImageIcon },
+  // Image generation disabled (Groq does not support image generation)
 ]
 
 export function ModeTabs({

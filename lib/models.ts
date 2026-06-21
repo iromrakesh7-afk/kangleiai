@@ -7,41 +7,42 @@ export interface ModelOption {
   description: string
 }
 
-// Zero-config Gateway providers (OpenAI, Anthropic, Google) — no API key needed.
+// Groq models — using Groq API directly (no Vercel gateway).
+// All models are currently active as of June 2026.
 export const CHAT_MODELS: ModelOption[] = [
   {
-    id: 'openai/gpt-5.2',
+    id: 'llama-3.3-70b-versatile',
     name: 'Kanglei Pro',
-    provider: 'OpenAI GPT-5.2',
-    description: 'Most capable all-round model',
+    provider: 'Groq Llama 3.3 70B',
+    description: 'Most capable model, excellent reasoning',
   },
   {
-    id: 'anthropic/claude-sonnet-4.6',
+    id: 'llama-3.1-70b-versatile',
     name: 'Kanglei Reason',
-    provider: 'Claude Sonnet 4.6',
-    description: 'Deep reasoning and long context',
+    provider: 'Groq Llama 3.1 70B',
+    description: 'Large model for complex tasks',
   },
   {
-    id: 'google/gemini-3-flash',
+    id: 'llama-3.1-8b-instant',
     name: 'Kanglei Flash',
-    provider: 'Gemini 3 Flash',
+    provider: 'Groq Llama 3.1 8B',
     description: 'Fast, efficient responses',
   },
   {
-    id: 'openai/gpt-5-mini',
+    id: 'mixtral-8x7b-32768',
     name: 'Kanglei Lite',
-    provider: 'OpenAI GPT-5 mini',
+    provider: 'Groq Mixtral 8x7B',
     description: 'Quick everyday answers',
   },
 ]
 
 export const DEFAULT_MODEL: ModelId = CHAT_MODELS[0].id
 
-// Model with built-in live web access for Perplexity-style search answers.
-export const SEARCH_MODEL = 'openai/gpt-4o-mini-search-preview'
+// For Groq: use the fastest model for search mode (Llama 3.1 8B Instant).
+export const SEARCH_MODEL = 'llama-3.1-8b-instant'
 
-// Image generation model (Gateway, zero-config).
-export const IMAGE_MODEL = 'openai/gpt-image-1'
+// Groq does not have built-in image generation; image mode will be disabled.
+export const IMAGE_MODEL = null
 
 export function getModelName(id: string): string {
   return CHAT_MODELS.find((m) => m.id === id)?.name ?? 'Kanglei AI'

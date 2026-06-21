@@ -6,8 +6,13 @@ import {
   streamText,
   type UIMessage,
 } from 'ai'
+import { createGroq } from '@ai-sdk/groq'
 
 export const maxDuration = 60
+
+const groq = createGroq({
+  apiKey: process.env.GROQ_API_KEY,
+})
 
 const VALID_CHAT_MODELS = new Set(CHAT_MODELS.map((m) => m.id))
 
@@ -16,8 +21,8 @@ You are knowledgeable, warm, and take quiet pride in your Manipuri roots while s
 Be helpful, accurate, and concise. Use Markdown formatting for structure, lists, and code blocks when useful.`
 
 const SEARCH_SYSTEM = `${BASE_SYSTEM}
-You have access to live web information. Answer the user's question directly and factually based on current information.
-Always finish your answer with a "Sources" section listing the source titles and URLs you relied on as a Markdown list.`
+Provide factual, well-researched answers to the user's question.
+Be concise and direct. Finish your answer with a "Sources" section listing key references if applicable.`
 
 export async function POST(req: Request) {
   const {
@@ -41,7 +46,7 @@ export async function POST(req: Request) {
         : CHAT_MODELS[0].id
 
   const result = streamText({
-    model: selectedModel,
+    model: groq(selectedModel),
     system: isSearch ? SEARCH_SYSTEM : BASE_SYSTEM,
     messages: await convertToModelMessages(messages),
     abortSignal: req.signal,
