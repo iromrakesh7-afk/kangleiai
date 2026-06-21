@@ -126,12 +126,10 @@ export function Sidebar({
           </div>
         ) : (
           <Button
-            variant="outline"
             onClick={() => router.push('/sign-in')}
-            className="w-full justify-start gap-2 border-sidebar-border bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
           >
-            <LogIn className="size-4" />
-            Sign in to save chats
+            Sign in with Google
           </Button>
         )}
       </div>
