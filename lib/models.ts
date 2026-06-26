@@ -1,8 +1,9 @@
 export type ModelId = string
 
-// OpenAI GPT-4o — using OpenAI API with OPENAI_API_KEY_2
-export const CHAT_MODEL = 'gpt-4o'
-export const SEARCH_MODEL = 'gpt-4o-mini'
+// Groq models — using Groq API with GROQ_API_KEY
+// Mixtral 8x7b is decommissioned, using Llama 3.3 70b instead
+export const CHAT_MODEL = 'llama-3.3-70b-versatile'
+export const SEARCH_MODEL = 'llama-3.1-8b-instant'
 
 export const DEFAULT_MODEL: ModelId = CHAT_MODEL
 

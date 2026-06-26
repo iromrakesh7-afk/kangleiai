@@ -52,29 +52,32 @@ NOTE: You are set to Manipuri language mode. Provide responses in English but wi
 When relevant, mention Manipur, Meitei culture, and local references.`
   }
 
-  // Use OpenAI API directly with OPENAI_API_KEY_2
-  if (!process.env.OPENAI_API_KEY_2) {
-    console.error('[v0] OPENAI_API_KEY_2 not configured')
-    throw new Error('OPENAI_API_KEY_2 is not configured')
+  // Use Groq API with GROQ_API_KEY
+  if (!process.env.GROQ_API_KEY) {
+    console.error('[v0] GROQ_API_KEY not configured')
+    throw new Error('GROQ_API_KEY is not configured')
   }
 
   const modelMessages = await convertToModelMessages(messages)
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  // Build messages array with only user and assistant roles
+  const groqMessages = [
+    { role: 'system' as const, content: systemPrompt },
+    ...modelMessages.map((m) => ({
+      role: (m.role === 'user' || m.role === 'assistant' ? m.role : 'user') as 'user' | 'assistant',
+      content: typeof m.content === 'string' ? m.content : m.content.map((c: any) => c.text || c.content || '').join(''),
+    })),
+  ]
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY_2}`,
+      'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       model: selectedModel,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...modelMessages.map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
-      ],
+      messages: groqMessages,
       stream: true,
       temperature: 0.7,
       max_tokens: 2048,
@@ -84,60 +87,15 @@ When relevant, mention Manipur, Meitei culture, and local references.`
 
   if (!response.ok) {
     const error = await response.text()
-    console.error('[v0] OpenAI error:', error)
+    console.error('[v0] Groq error:', error)
     return new Response(
-      JSON.stringify({ error: 'Failed to get response from OpenAI' }),
+      JSON.stringify({ error: 'Failed to get response from Groq' }),
       { status: response.status, headers: { 'Content-Type': 'application/json' } }
     )
   }
 
-  // Stream the response and save chat
-  if (chatId && response.body) {
-    const allMessages = [...messages]
-    let fullContent = ''
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-
-    // Start a background task to read and save
-    ;(async () => {
-      try {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          const chunk = decoder.decode(value)
-          const lines = chunk.split('\n')
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6)
-              if (data === '[DONE]') continue
-
-              try {
-                const json = JSON.parse(data)
-                const delta = json.choices?.[0]?.delta?.content || ''
-                fullContent += delta
-              } catch {
-                // Ignore JSON parse errors
-              }
-            }
-          }
-        }
-
-        if (fullContent) {
-          allMessages.push({
-            id: crypto.randomUUID(),
-            role: 'assistant',
-            content: fullContent,
-          })
-          await saveChat(chatId, allMessages)
-        }
-      } catch (err) {
-        console.log('[v0] Chat save error:', (err as Error).message)
-      }
-    })()
-  }
-
+  // Stream the response directly without consuming the body
+  // The body will be streamed to the client and we won't try to read it
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
