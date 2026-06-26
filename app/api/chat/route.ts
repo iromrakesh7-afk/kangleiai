@@ -1,12 +1,9 @@
 import { CHAT_MODELS, SEARCH_MODEL, SUPPORTED_LANGUAGES, type ChatMode } from '@/lib/models'
 import { saveChat } from '@/app/actions/chats'
 import {
-  consumeStream,
   convertToModelMessages,
-  streamText,
   type UIMessage,
 } from 'ai'
-import { openai } from '@ai-sdk/openai'
 
 export const maxDuration = 60
 
@@ -62,7 +59,7 @@ NOTE: You are set to Manipuri language mode. Provide responses in English but wi
 When relevant, mention Manipur, Meitei culture, and local references.`
   }
 
-  // Use OpenRouter through OpenAI-compatible API
+  // Call OpenRouter API directly for streaming
   if (!process.env.OPENROUTER_API_KEY) {
     console.error('[v0] OPENROUTER_API_KEY not configured')
     throw new Error('OPENROUTER_API_KEY is not configured')
@@ -70,37 +67,95 @@ When relevant, mention Manipur, Meitei culture, and local references.`
 
   console.log('[v0] Chat request - Model:', selectedModel, 'Language:', language)
 
-  const result = streamText({
-    model: openai(selectedModel, {
-      apiKey: process.env.OPENROUTER_API_KEY,
-      baseURL: 'https://openrouter.ai/api/v1',
-      headers: {
-        'HTTP-Referer': process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}`
-          : 'http://localhost:3000',
-        'X-Title': 'Kanglei AI',
-      },
+  const modelMessages = await convertToModelMessages(messages)
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : 'http://localhost:3000',
+      'X-Title': 'Kanglei AI',
+    },
+    body: JSON.stringify({
+      model: selectedModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...modelMessages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+      ],
+      stream: true,
+      temperature: 0.7,
+      max_tokens: 2048,
     }),
-    system: systemPrompt,
-    messages: await convertToModelMessages(messages),
-    abortSignal: req.signal,
+    signal: req.signal,
   })
 
-  return result.toUIMessageStreamResponse({
-    onError: (error) => {
-      return error instanceof Error ? error.message : String(error)
-    },
-    originalMessages: messages,
-    onFinish: async ({ messages: allMessages, isAborted }) => {
-      if (isAborted) return
-      if (chatId) {
-        try {
-          await saveChat(chatId, allMessages)
-        } catch (err) {
-          console.log('[v0] saveChat failed:', (err as Error).message)
+  if (!response.ok) {
+    const error = await response.text()
+    console.error('[v0] OpenRouter error:', error)
+    return new Response(
+      JSON.stringify({ error: 'Failed to get response from OpenRouter' }),
+      { status: response.status, headers: { 'Content-Type': 'application/json' } }
+    )
+  }
+
+  // Save chat after stream completes
+  if (chatId && response.body) {
+    const allMessages = [...messages]
+    let fullContent = ''
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value)
+        const lines = chunk.split('\n')
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            if (data === '[DONE]') continue
+
+            try {
+              const json = JSON.parse(data)
+              const delta = json.choices?.[0]?.delta?.content || ''
+              fullContent += delta
+            } catch {
+              // Ignore JSON parse errors
+            }
+          }
         }
       }
+
+      // Save the chat with the response
+      if (fullContent) {
+        allMessages.push({
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: fullContent,
+        })
+        await saveChat(chatId, allMessages)
+      }
+    } catch (err) {
+      console.log('[v0] Chat save error:', (err as Error).message)
+    }
+  }
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
     },
-    consumeSseStream: consumeStream,
   })
 }
