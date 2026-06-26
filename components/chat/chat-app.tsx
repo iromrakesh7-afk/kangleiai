@@ -47,7 +47,7 @@ export function ChatApp({
     transport: new DefaultChatTransport({
       api: '/api/chat',
       prepareSendMessagesRequest: ({ messages, body }) => ({
-        body: { messages, ...body },
+        body: { messages, mode, language, ...body },
       }),
     }),
   })

@@ -102,9 +102,76 @@ When relevant, mention Manipur, Meitei culture, and local references.`
       )
     }
 
-    // Return the Groq response directly - it's already properly formatted
-    // The groqResponse from Groq API is in OpenAI SSE format that the client expects
-    return groqResponse
+    // Transform Groq's OpenAI format response into Vercel AI SDK message format
+    // The AI SDK expects: text-start {id} -> text-delta {id, delta} -> text-end {id}
+    const transformedStream = new ReadableStream({
+      async start(controller) {
+        try {
+          const reader = groqResponse.body!.getReader()
+          const decoder = new TextDecoder()
+          let buffer = ''
+          let hasStarted = false
+          const messageId = `msg_${Date.now()}`
+
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split('\n')
+            
+            // Keep the last incomplete line in the buffer
+            buffer = lines.pop() || ''
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6).trim()
+                if (data === '[DONE]') {
+                  // Stream is complete, we'll send text-end after the loop
+                  continue
+                }
+
+                try {
+                  const json = JSON.parse(data)
+                  const content = json.choices?.[0]?.delta?.content
+
+                  // Send text-start once when we get the first content
+                  if (!hasStarted && content !== undefined) {
+                    controller.enqueue(`data: ${JSON.stringify({ type: 'text-start', id: messageId })}\n\n`)
+                    hasStarted = true
+                  }
+                  
+                  // Send text-delta for each content chunk
+                  if (content && hasStarted) {
+                    controller.enqueue(`data: ${JSON.stringify({ type: 'text-delta', id: messageId, delta: content })}\n\n`)
+                  }
+                } catch (e) {
+                  // Skip malformed JSON
+                }
+              }
+            }
+          }
+
+          // Send the final finish message if we started
+          if (hasStarted) {
+            controller.enqueue(`data: ${JSON.stringify({ type: 'text-end', id: messageId })}\n\n`)
+          }
+          controller.close()
+        } catch (err) {
+          controller.error(err)
+        }
+      },
+    })
+
+    return new Response(transformedStream, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'x-vercel-ai-ui-message-stream': 'v1',
+      },
+    })
   } catch (error) {
     console.error('[v0] Chat API error:', error)
     return new Response(
