@@ -23,6 +23,7 @@ import { MessageList } from './message-list'
 import { ModeTabs } from './mode-tabs'
 import { Sidebar, type ChatSummary } from './sidebar'
 import { Welcome } from './welcome'
+import { AuthModal } from './auth-modal'
 
 function newId() {
   return globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)
@@ -198,6 +199,11 @@ export function ChatApp({
     }
 
     sendMessage({ text: trimmed }, { body: { mode, chatId, language } })
+  }
+
+  // Show auth modal for unauthenticated users
+  if (!user) {
+    return <AuthModal />
   }
 
   return (
