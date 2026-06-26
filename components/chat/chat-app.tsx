@@ -7,7 +7,6 @@ import {
   saveChat,
 } from '@/app/actions/chats'
 import {
-  CHAT_MODELS,
   DEFAULT_MODEL,
   getModelName,
   type ChatMode,
@@ -19,10 +18,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Composer } from './composer'
 import { ChatSearchToggle } from './chat-search-toggle'
-import { KeyboardShortcuts } from './keyboard-shortcuts'
 import { LanguageSelector } from './language-selector'
 import { MessageList } from './message-list'
-import { ModelSelector } from './model-selector'
 import { ModeTabs } from './mode-tabs'
 import { Sidebar, type ChatSummary } from './sidebar'
 import { Welcome } from './welcome'
@@ -40,7 +37,6 @@ export function ChatApp({
 }) {
   const [chats, setChats] = useState<ChatSummary[]>(initialChats)
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
-  const [model, setModel] = useState(DEFAULT_MODEL)
   const [mode, setMode] = useState<ChatMode>('chat')
   const [language, setLanguage] = useState('en')
   const [input, setInput] = useState('')
@@ -91,37 +87,11 @@ export function ChatApp({
         e.preventDefault()
         setLanguage((prev) => (prev === 'en' ? 'mni' : 'en'))
       }
-
-      // Ctrl/Cmd + 1-4: Switch AI models
-      if ((e.ctrlKey || e.metaKey) && e.key >= '1' && e.key <= '4') {
-        e.preventDefault()
-        const modelIndex = parseInt(e.key) - 1
-        if (modelIndex < CHAT_MODELS.length) {
-          setModel(CHAT_MODELS[modelIndex].id)
-        }
-      }
-
-      // Ctrl/Cmd + N: Next model
-      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-        e.preventDefault()
-        const currentIndex = CHAT_MODELS.findIndex((m) => m.id === model)
-        const nextIndex = (currentIndex + 1) % CHAT_MODELS.length
-        setModel(CHAT_MODELS[nextIndex].id)
-      }
-
-      // Ctrl/Cmd + P: Previous model
-      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-        e.preventDefault()
-        const currentIndex = CHAT_MODELS.findIndex((m) => m.id === model)
-        const prevIndex =
-          (currentIndex - 1 + CHAT_MODELS.length) % CHAT_MODELS.length
-        setModel(CHAT_MODELS[prevIndex].id)
-      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [model])
+  }, [])
 
   async function refreshChats() {
     if (!user) return
@@ -227,7 +197,7 @@ export function ChatApp({
       return
     }
 
-    sendMessage({ text: trimmed }, { body: { model, mode, chatId, language } })
+    sendMessage({ text: trimmed }, { body: { mode, chatId, language } })
   }
 
   return (
@@ -279,18 +249,10 @@ export function ChatApp({
           </Button>
           <div className="flex flex-1 items-center justify-between gap-3">
             <ModeTabs value={mode} onChange={setMode} disabled={busy} />
-            <div className="flex items-center gap-2">
-              <ModelSelector
-                value={model}
-                onChange={setModel}
-                disabled={busy}
-              />
-              <LanguageSelector
-                currentLanguage={language}
-                onLanguageChange={setLanguage}
-              />
-              <KeyboardShortcuts />
-            </div>
+            <LanguageSelector
+              currentLanguage={language}
+              onLanguageChange={setLanguage}
+            />
           </div>
         </header>
 
