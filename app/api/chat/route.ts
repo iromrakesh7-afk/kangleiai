@@ -52,27 +52,42 @@ NOTE: You are set to Manipuri language mode. Provide responses in English but wi
 When relevant, mention Manipur, Meitei culture, and local references.`
   }
 
-  // Use Groq API with GROQ_API_KEY
-  if (!process.env.GROQ_API_KEY) {
-    console.error('[v0] GROQ_API_KEY not configured')
-    throw new Error('GROQ_API_KEY is not configured')
+  // Use Groq API with GROQ_API_KEY_2
+  if (!process.env.GROQ_API_KEY_2) {
+    console.error('[v0] GROQ_API_KEY_2 not configured')
+    throw new Error('GROQ_API_KEY_2 is not configured')
   }
 
-  const modelMessages = await convertToModelMessages(messages)
-
-  // Build messages array with only user and assistant roles
-  const groqMessages = [
-    { role: 'system' as const, content: systemPrompt },
-    ...modelMessages.map((m) => ({
-      role: (m.role === 'user' || m.role === 'assistant' ? m.role : 'user') as 'user' | 'assistant',
-      content: typeof m.content === 'string' ? m.content : m.content.map((c: any) => c.text || c.content || '').join(''),
-    })),
+  // Build messages array with only role and content - strict Groq format
+  const groqMessages: Array<{ role: string; content: string }> = [
+    { role: 'system', content: systemPrompt },
   ]
+
+  for (const m of messages) {
+    if (m.role !== 'user' && m.role !== 'assistant') continue
+
+    let content = ''
+    if (typeof m.content === 'string') {
+      content = m.content
+    } else if (Array.isArray(m.content)) {
+      content = m.content
+        .filter((c) => c && typeof c === 'object' && 'text' in c)
+        .map((c) => c.text)
+        .join('')
+    }
+
+    if (content) {
+      groqMessages.push({
+        role: m.role,
+        content: content,
+      })
+    }
+  }
 
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+      'Authorization': `Bearer ${process.env.GROQ_API_KEY_2}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
