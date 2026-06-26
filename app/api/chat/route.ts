@@ -102,15 +102,9 @@ When relevant, mention Manipur, Meitei culture, and local references.`
       )
     }
 
-    // Return the Groq stream directly as SSE
-    return new Response(groqResponse.body, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    })
+    // Return the Groq response directly - it's already properly formatted
+    // The groqResponse from Groq API is in OpenAI SSE format that the client expects
+    return groqResponse
   } catch (error) {
     console.error('[v0] Chat API error:', error)
     return new Response(
