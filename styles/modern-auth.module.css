@@ -147,6 +147,34 @@
   }
 }
 
+.toggleAuth {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.toggleAuth p {
+  color: #666;
+  margin: 0;
+}
+
+.toggleLink {
+  background: none;
+  border: none;
+  color: #512da8;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0;
+  font: inherit;
+  transition: color 0.3s ease;
+}
+
+.toggleLink:hover {
+  color: #3d1f70;
+  text-decoration: underline;
+}
+
 @media (max-width: 768px) {
   .signInOnly {
     width: 100%;
