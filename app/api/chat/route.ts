@@ -52,12 +52,67 @@ NOTE: You are set to Manipuri language mode. Provide responses in English but wi
 When relevant, mention Manipur, Meitei culture, and local references.`
   }
 
-  // Generate a simple mock response (API section removed)
-  const mockResponse = `data: {"choices":[{"delta":{"content":"Hello! I'm Kanglei AI, your assistant. I'm ready to help you with any questions or tasks. How can I assist you today?"}}]}
-data: [DONE]`
+  // Use Groq API with GROQ_API_KEY_1
+  if (!process.env.GROQ_API_KEY_1) {
+    console.error('[v0] GROQ_API_KEY_1 not configured')
+    throw new Error('GROQ_API_KEY_1 is not configured')
+  }
 
-  return new Response(mockResponse, {
-    status: 200,
+  // Build messages array with only role and content - strict Groq format
+  const groqMessages: Array<{ role: string; content: string }> = [
+    { role: 'system', content: systemPrompt },
+  ]
+
+  for (const m of messages) {
+    if (m.role !== 'user' && m.role !== 'assistant') continue
+
+    let content = ''
+    if (typeof m.content === 'string') {
+      content = m.content
+    } else if (Array.isArray(m.content)) {
+      content = m.content
+        .filter((c) => c && typeof c === 'object' && 'text' in c)
+        .map((c) => c.text)
+        .join('')
+    }
+
+    if (content) {
+      groqMessages.push({
+        role: m.role,
+        content: content,
+      })
+    }
+  }
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.GROQ_API_KEY_1}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: selectedModel,
+      messages: groqMessages,
+      stream: true,
+      temperature: 0.7,
+      max_tokens: 2048,
+    }),
+    signal: req.signal,
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    console.error('[v0] Groq error:', error)
+    return new Response(
+      JSON.stringify({ error: 'Failed to get response from Groq' }),
+      { status: response.status, headers: { 'Content-Type': 'application/json' } }
+    )
+  }
+
+  // Stream the response directly without consuming the body
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
