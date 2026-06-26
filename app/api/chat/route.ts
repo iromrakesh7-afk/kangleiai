@@ -4,20 +4,26 @@ import type { UIMessage } from 'ai'
 
 export const maxDuration = 60
 
-const BASE_SYSTEM = `You are Kanglei AI, an advanced AI assistant founded by Rakesh Irom from Manipur, India.
-You are knowledgeable, warm, and take quiet pride in your Manipuri roots while serving users worldwide.
-Be helpful, accurate, and concise. Use Markdown formatting for structure, lists, and code blocks when useful.`
+const BASE_SYSTEM = `You are Kanglei AI, an intelligent and knowledgeable assistant.
+Your primary goal is to answer the user's questions accurately, directly, and thoroughly.
+- Focus on answering the specific question asked, not on introducing yourself
+- Be accurate and factual in all responses
+- Use clear, concise language and Markdown formatting for structure and lists
+- If a question is outside your knowledge, acknowledge the limitation and provide what you can
+- Provide well-researched, helpful answers with relevant details and examples when useful`
 
 const SEARCH_SYSTEM = `${BASE_SYSTEM}
-Provide factual, well-researched answers to the user's question.
-Be concise and direct. Finish your answer with a "Sources" section listing key references if applicable.`
+- Provide factual, well-researched answers to the user's question
+- Be concise and direct, focusing on what the user asked for
+- Include relevant sources or references when applicable
+- If the question requires detailed research, provide a comprehensive answer with context`
 
 const LANGUAGE_SYSTEMS: Record<string, string> = {
   en: BASE_SYSTEM,
   mni: `${BASE_SYSTEM}
-
-NOTE: You are set to Manipuri language mode. Provide responses in English but with Manipuri cultural context and pride.
-When relevant, mention Manipur, Meitei culture, and local references to enhance Manipuri identity in your answers.`,
+- You can provide responses in English with Manipuri cultural context when relevant
+- When appropriate, mention Manipur, Meitei culture, or local references to enrich your answers
+- Always prioritize answering the user's specific question accurately above all else`,
 }
 
 export async function POST(req: Request) {
@@ -30,8 +36,6 @@ export async function POST(req: Request) {
     mode?: ChatMode
     language?: string
   } = await req.json()
-
-  console.log('[v0] Chat API called with:', { messagesCount: messages.length, mode, language, lastMessage: JSON.stringify(messages[messages.length - 1]) })
 
   const isSearch = mode === 'search'
   const selectedLanguage = language && SUPPORTED_LANGUAGES.some(l => l.code === language) ? language : 'en'
@@ -47,13 +51,11 @@ NOTE: You are set to Manipuri language mode. Provide responses in English but wi
 When relevant, mention Manipur, Meitei culture, and local references.`
   }
 
-  // Use Groq API with GROQ_API_KEY_1
   if (!process.env.GROQ_API_KEY_1) {
     console.error('[v0] GROQ_API_KEY_1 not configured')
     throw new Error('GROQ_API_KEY_1 is not configured')
   }
 
-  // Build messages array - clean format for Groq
   const groqMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
     { role: 'system', content: systemPrompt },
   ]
@@ -62,18 +64,17 @@ When relevant, mention Manipur, Meitei culture, and local references.`
     if (m.role !== 'user' && m.role !== 'assistant') continue
 
     let content = ''
-    if (typeof m.content === 'string') {
-      content = m.content
-    } else if (Array.isArray(m.content)) {
-      content = m.content
-        .filter((c) => c && typeof c === 'object' && 'text' in c)
-        .map((c: any) => c.text)
-        .join('')
+    if (m.parts && Array.isArray(m.parts)) {
+      for (const part of m.parts) {
+        if (part.type === 'text' && 'text' in part) {
+          content += (part as any).text
+        }
+      }
     }
 
     if (content) {
       groqMessages.push({
-        role: m.role as 'user' | 'assistant',
+        role: m.role,
         content: content,
       })
     }
@@ -104,8 +105,6 @@ When relevant, mention Manipur, Meitei culture, and local references.`
       )
     }
 
-    // Transform Groq's OpenAI format response into Vercel AI SDK message format
-    // The AI SDK expects: text-start {id} -> text-delta {id, delta} -> text-end {id}
     const transformedStream = new ReadableStream({
       async start(controller) {
         try {
@@ -121,15 +120,12 @@ When relevant, mention Manipur, Meitei culture, and local references.`
 
             buffer += decoder.decode(value, { stream: true })
             const lines = buffer.split('\n')
-            
-            // Keep the last incomplete line in the buffer
             buffer = lines.pop() || ''
 
             for (const line of lines) {
               if (line.startsWith('data: ')) {
                 const data = line.slice(6).trim()
                 if (data === '[DONE]') {
-                  // Stream is complete, we'll send text-end after the loop
                   continue
                 }
 
@@ -137,13 +133,11 @@ When relevant, mention Manipur, Meitei culture, and local references.`
                   const json = JSON.parse(data)
                   const content = json.choices?.[0]?.delta?.content
 
-                  // Send text-start once when we get the first content
                   if (!hasStarted && content !== undefined) {
                     controller.enqueue(`data: ${JSON.stringify({ type: 'text-start', id: messageId })}\n\n`)
                     hasStarted = true
                   }
                   
-                  // Send text-delta for each content chunk
                   if (content && hasStarted) {
                     controller.enqueue(`data: ${JSON.stringify({ type: 'text-delta', id: messageId, delta: content })}\n\n`)
                   }
@@ -154,7 +148,6 @@ When relevant, mention Manipur, Meitei culture, and local references.`
             }
           }
 
-          // Send the final finish message if we started
           if (hasStarted) {
             controller.enqueue(`data: ${JSON.stringify({ type: 'text-end', id: messageId })}\n\n`)
           }
