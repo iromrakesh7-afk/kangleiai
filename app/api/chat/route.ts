@@ -1,9 +1,6 @@
 import { CHAT_MODEL, SEARCH_MODEL, SUPPORTED_LANGUAGES, type ChatMode } from '@/lib/models'
 import { saveChat } from '@/app/actions/chats'
-import {
-  convertToModelMessages,
-  type UIMessage,
-} from 'ai'
+import type { UIMessage } from 'ai'
 
 export const maxDuration = 60
 
@@ -26,15 +23,11 @@ When relevant, mention Manipur, Meitei culture, and local references to enhance 
 export async function POST(req: Request) {
   const {
     messages,
-    model,
     mode,
-    chatId,
     language,
   }: {
     messages: UIMessage[]
-    model?: string
     mode?: ChatMode
-    chatId?: string
     language?: string
   } = await req.json()
 
@@ -58,8 +51,8 @@ When relevant, mention Manipur, Meitei culture, and local references.`
     throw new Error('GROQ_API_KEY_1 is not configured')
   }
 
-  // Build messages array with only role and content - strict Groq format
-  const groqMessages: Array<{ role: string; content: string }> = [
+  // Build messages array - clean format for Groq
+  const groqMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
     { role: 'system', content: systemPrompt },
   ]
 
@@ -72,51 +65,57 @@ When relevant, mention Manipur, Meitei culture, and local references.`
     } else if (Array.isArray(m.content)) {
       content = m.content
         .filter((c) => c && typeof c === 'object' && 'text' in c)
-        .map((c) => c.text)
+        .map((c: any) => c.text)
         .join('')
     }
 
     if (content) {
       groqMessages.push({
-        role: m.role,
+        role: m.role as 'user' | 'assistant',
         content: content,
       })
     }
   }
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.GROQ_API_KEY_1}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: selectedModel,
-      messages: groqMessages,
-      stream: true,
-      temperature: 0.7,
-      max_tokens: 2048,
-    }),
-    signal: req.signal,
-  })
+  try {
+    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY_1}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: selectedModel,
+        messages: groqMessages,
+        stream: true,
+        temperature: 0.7,
+        max_tokens: 2048,
+      }),
+    })
 
-  if (!response.ok) {
-    const error = await response.text()
-    console.error('[v0] Groq error:', error)
+    if (!groqResponse.ok) {
+      const error = await groqResponse.text()
+      console.error('[v0] Groq API error:', error)
+      return new Response(
+        JSON.stringify({ error: `Groq API error: ${groqResponse.status}` }),
+        { status: groqResponse.status, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Return the Groq stream directly as SSE
+    return new Response(groqResponse.body, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    })
+  } catch (error) {
+    console.error('[v0] Chat API error:', error)
     return new Response(
-      JSON.stringify({ error: 'Failed to get response from Groq' }),
-      { status: response.status, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     )
   }
-
-  // Stream the Groq response directly (Groq uses OpenAI-compatible format)
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    },
-  })
 }
