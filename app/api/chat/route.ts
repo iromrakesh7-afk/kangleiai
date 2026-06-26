@@ -52,10 +52,10 @@ NOTE: You are set to Manipuri language mode. Provide responses in English but wi
 When relevant, mention Manipur, Meitei culture, and local references.`
   }
 
-  // Use Groq API with GROQ_API_KEY_2
-  if (!process.env.GROQ_API_KEY_2) {
-    console.error('[v0] GROQ_API_KEY_2 not configured')
-    throw new Error('GROQ_API_KEY_2 is not configured')
+  // Use Groq API with GROQ_API_KEY_1
+  if (!process.env.GROQ_API_KEY_1) {
+    console.error('[v0] GROQ_API_KEY_1 not configured')
+    throw new Error('GROQ_API_KEY_1 is not configured')
   }
 
   // Build messages array with only role and content - strict Groq format
@@ -87,7 +87,7 @@ When relevant, mention Manipur, Meitei culture, and local references.`
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${process.env.GROQ_API_KEY_2}`,
+      'Authorization': `Bearer ${process.env.GROQ_API_KEY_1}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
