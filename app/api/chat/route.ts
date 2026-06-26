@@ -109,7 +109,7 @@ When relevant, mention Manipur, Meitei culture, and local references.`
     )
   }
 
-  // Stream the response directly without consuming the body
+  // Stream the Groq response directly (Groq uses OpenAI-compatible format)
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
