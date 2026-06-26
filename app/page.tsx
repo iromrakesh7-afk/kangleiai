@@ -8,6 +8,7 @@ import { headers } from 'next/headers'
 
 export const revalidate = 3600 // Revalidate every hour
 
+// Force Vercel rebuild - popup removed
 export default async function Home() {
   let user: { name: string; email: string; isAdmin: boolean } | null = null
   let chatList: { id: string; title: string }[] = []
