@@ -31,6 +31,8 @@ export async function POST(req: Request) {
     language?: string
   } = await req.json()
 
+  console.log('[v0] Chat API called with:', { messagesCount: messages.length, mode, language, lastMessage: JSON.stringify(messages[messages.length - 1]) })
+
   const isSearch = mode === 'search'
   const selectedLanguage = language && SUPPORTED_LANGUAGES.some(l => l.code === language) ? language : 'en'
   const selectedModel = isSearch ? SEARCH_MODEL : CHAT_MODEL
