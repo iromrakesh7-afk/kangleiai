@@ -33,8 +33,15 @@ export function Sidebar({
   const router = useRouter()
 
   async function signOut() {
-    await authClient.signOut()
-    router.refresh()
+    try {
+      await authClient.signOut()
+      // Hard reload the page to ensure fresh server component data
+      window.location.href = '/'
+    } catch (error) {
+      console.error('[v0] Logout error:', error)
+      // Even if there's an error, redirect to home
+      window.location.href = '/'
+    }
   }
 
   return (
