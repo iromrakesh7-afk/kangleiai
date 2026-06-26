@@ -4,8 +4,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { CHAT_MODELS } from '@/lib/models'
@@ -33,8 +31,6 @@ export function ModelSelector({
         <ChevronDown className="size-3.5 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-64">
-        <DropdownMenuLabel>Choose a model</DropdownMenuLabel>
-        <DropdownMenuSeparator />
         {CHAT_MODELS.map((m) => (
           <DropdownMenuItem
             key={m.id}
